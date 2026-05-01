@@ -3,13 +3,15 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <fstream>
+#include "protocol.h"
+#include "socket_utils.h"
+
 const size_t CHUNK_SIZE = 64 * 1024;
 
 int main(){
     int server_fd, new_socket;
     struct sockaddr_in address;
     int addrlen = sizeof(address);
-    size_t file_size;
 
     server_fd = socket(AF_INET, SOCK_STREAM, 0);
     if(server_fd == 0){
@@ -19,7 +21,7 @@ int main(){
 
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
-    address.sin_port = htons(8080);
+    address.sin_port = htons(8082);
 
     if(bind(server_fd, (struct sockaddr*)&address,  addrlen) < 0){
         perror("Bind Failed");
@@ -31,7 +33,7 @@ int main(){
         return -1;
     }
 
-    std::cout << "Server listening on port 8080...\n";
+    std::cout << "Server listening on port 8082...\n";
 
     new_socket = accept(server_fd, (struct sockaddr*)&address, (socklen_t*)&addrlen);
     if(new_socket < 0){
@@ -41,29 +43,72 @@ int main(){
 
     std::cout << "Connection accepted from client.\n";
 
-    // char buffer[1024] = {0};
-    // read(new_socket, buffer, 1024);
-    // std::cout << "Received message: " << buffer << std::endl;
-
-    read(new_socket, &file_size, sizeof(file_size));
-
-    std::ofstream output_file("received_data.txt", std::ios::binary);
-
-    char buffer[CHUNK_SIZE];
-
-    size_t total_bytes_read = 0;
-    while (total_bytes_read < file_size) {
-        int bytes_read = read(new_socket, buffer, std::min(CHUNK_SIZE, file_size - total_bytes_read));
-        if(bytes_read <= 0) {
-            std::cerr << "Error reading from socket or connection closed by client.\n";
-            break;
-        }
-        output_file.write(buffer, bytes_read);
-        total_bytes_read += bytes_read;
+    Header start_header{};
+    if(recv_all(new_socket, &start_header, sizeof(start_header)) <= 0){
+        std::cerr << "Error receiving start header or connection closed by client.\n";
+        return -1;
+    }
+    if(start_header.type != START){
+        std::cerr << "Expected START message, but received type: " << start_header.type << "\n";
+        return -1;
     }
 
-    output_file.close();
-    std::cout << "File received and saved as received_data.txt\n";
+    uint32_t name_len;
+    size_t file_size;
+    if(recv_all(new_socket, &file_size, sizeof(file_size)) <= 0){
+        std::cerr << "Error receiving file size or connection closed by client.\n";
+        return -1;
+    }
+    if(recv_all(new_socket, &name_len, sizeof(name_len)) <= 0){
+        std::cerr << "Error receiving filename length or connection closed by client.\n";
+        return -1;
+    }
+    char filename_buffer[256];
+    if(name_len >= sizeof(filename_buffer)){
+        std::cerr << "Filename too long: " << name_len << " bytes\n";
+        return -1;
+    }
+    if(recv_all(new_socket, filename_buffer, name_len) <= 0){
+        std::cerr << "Error receiving filename or connection closed by client.\n";
+        return -1;
+    }
+    filename_buffer[name_len] = '\0'; //For safety, null-terminate the filename
+    std::string filename(filename_buffer);
+    filename += "_received"; // Append .received to avoid overwriting existing files
+    std::ofstream output_file(filename, std::ios::binary);
+    if(!output_file){
+        std::cerr << "Could not open output file: " << filename << "\n";
+        return -1;
+    }
+    std::cout << "Receiving file: " << filename << " of size: " << file_size << " bytes\n";
+
+    while(true){
+        Header header{};
+        if(recv_all(new_socket, &header, sizeof(header)) <= 0){
+            std::cerr << "Error receiving header or connection closed by client.\n";
+            break;
+        }
+        if(header.type == DATA){
+            char data_buffer[CHUNK_SIZE];
+            if(recv_all(new_socket, data_buffer, header.data_size) <= 0){
+                std::cerr << "Error receiving data or connection closed by client.\n";
+                break;
+            }
+            // Process the received chunk (e.g., write to file)
+           
+            output_file.write(data_buffer, header.data_size);
+            output_file.close();
+
+            // Send ACK
+            Header ack_header{ACK, header.chunk_id, 0};
+            send_all(new_socket, &ack_header, sizeof(ack_header));
+        } else if(header.type == END){
+            std::cout << "Received END message. File transfer complete.\n";
+            break;
+        } else {
+            std::cerr << "Received unknown message type: " << header.type << "\n";
+        }
+    }
 
     close(new_socket);
     close(server_fd);
