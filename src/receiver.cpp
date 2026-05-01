@@ -6,10 +6,10 @@
 #include "protocol.h"
 #include "socket_utils.h"
 #include "checksum_helper.h"
-
-const size_t CHUNK_SIZE = 64 * 1024;
+#include "config_reader.h"
 
 int main(){
+    Config cfg = load_cfg();
     int server_fd, new_socket;
     struct sockaddr_in address;
     int addrlen = sizeof(address);
@@ -22,7 +22,7 @@ int main(){
 
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
-    address.sin_port = htons(8082);
+    address.sin_port = htons(cfg.port);
 
     if(bind(server_fd, (struct sockaddr*)&address,  addrlen) < 0){
         perror("Bind Failed");
@@ -34,7 +34,7 @@ int main(){
         return -1;
     }
 
-    std::cout << "Server listening on port 8082...\n";
+    std::cout << "Server listening on port " << cfg.port << "...\n";
 
     new_socket = accept(server_fd, (struct sockaddr*)&address, (socklen_t*)&addrlen);
     if(new_socket < 0){
@@ -90,7 +90,7 @@ int main(){
             break;
         }
         if(header.type == DATA){
-            char data_buffer[CHUNK_SIZE];
+            char data_buffer[cfg.chunk_size];
             if(recv_all(new_socket, data_buffer, header.data_size) <= 0){
                 std::cerr << "Error receiving data or connection closed by client.\n";
                 break;
@@ -124,6 +124,7 @@ int main(){
         }
     }
 
+    output_file.close();
     close(new_socket);
     close(server_fd);
 

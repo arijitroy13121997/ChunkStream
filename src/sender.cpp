@@ -6,9 +6,10 @@
 #include "protocol.h"
 #include "socket_utils.h"
 #include "checksum_helper.h"
-const size_t CHUNK_SIZE = 64 * 1024;
+#include "config_reader.h"
 
 int main() {
+    Config cfg = load_cfg();
     int sock = 0;
     struct sockaddr_in serv_addr;
 
@@ -19,9 +20,9 @@ int main() {
     }
 
     serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(8082);
+    serv_addr.sin_port = htons(cfg.port);
 
-    if(inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr)<=0) {
+    if(inet_pton(AF_INET, cfg.ip.c_str(), &serv_addr.sin_addr)<=0) {
         perror("Invalid address or address not supported");
         return -1;
     }
@@ -31,9 +32,9 @@ int main() {
         return -1;
     }
 
-    std::ifstream file("data.txt", std::ios::binary);
+    std::ifstream file(cfg.file, std::ios::binary);
     if (!file) {
-        std::cerr << "Could not open file data.txt" << std::endl;
+        std::cerr << "Could not open file " << cfg.file << std::endl;
         return -1;
     }
 
@@ -41,7 +42,7 @@ int main() {
     size_t file_size = file.tellg();
     file.seekg(0, std::ios::beg);
 
-    std::string filename = "data.txt";
+    std::string filename = cfg.file;
     uint32_t name_len = filename.size();
 
     Header start_header{START, 0, sizeof(file_size) + name_len + sizeof(name_len)}; // Include header size in data_size
@@ -54,11 +55,11 @@ int main() {
     // send(sock, &file_size, sizeof(file_size), MSG_NOSIGNAL);
     // std::cout << "Sending file of size: " << file_size << " bytes" << std::endl;
 
-    char buffer[CHUNK_SIZE];
+    char buffer[cfg.chunk_size];
     uint32_t chunk_id = 0;
 
     while(!file.eof()) {
-        file.read(buffer, CHUNK_SIZE);
+        file.read(buffer, cfg.chunk_size);
         std::streamsize bytes_read = file.gcount();
 
         if(bytes_read <= 0)
@@ -71,7 +72,7 @@ int main() {
         recv_all(sock, &ack_header, sizeof(ack_header));
         if(ack_header.type != ACK || ack_header.chunk_id != chunk_id) {
             std::cerr << "Failed to receive ACK for chunk " << chunk_id << std::endl;
-            file.seekg(chunk_id * CHUNK_SIZE, std::ios::beg); // Rewind to resend the chunk
+            file.seekg(chunk_id * cfg.chunk_size, std::ios::beg); // Rewind to resend the chunk
             continue;
         }
         chunk_id++;
@@ -80,7 +81,7 @@ int main() {
     // Header end_header{END, chunk_id, 0};
     // send_all(sock, &end_header, sizeof(end_header));
 
-    auto hash = compute_sha256("data.txt");
+    auto hash = compute_sha256(cfg.file);
     Header end_sha256_header{END, chunk_id, hash.size()};
     send_all(sock, &end_sha256_header, sizeof(end_sha256_header));
     send_all(sock, hash.data(), hash.size());
