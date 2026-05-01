@@ -5,6 +5,7 @@
 #include <fstream>
 #include "protocol.h"
 #include "socket_utils.h"
+#include "checksum_helper.h"
 
 const size_t CHUNK_SIZE = 64 * 1024;
 
@@ -102,7 +103,20 @@ int main(){
             // Send ACK
             Header ack_header{ACK, header.chunk_id, 0};
             send_all(new_socket, &ack_header, sizeof(ack_header));
+
         } else if(header.type == END){
+            std::array<unsigned char, SHA256_DIGEST_LENGTH> recv_hash;
+            if(recv_all(new_socket, recv_hash.data(), header.data_size) <= 0){
+                std::cerr << "Error receiving hash or connection closed by client.\n";
+                break;
+            }
+            auto computed_hash = compute_sha256(filename);
+            if(recv_hash == computed_hash){
+                std::cout << "SHA-256 hash matches. File integrity verified.\n";
+            } else {
+                std::cerr << "SHA-256 hash mismatch! File may be corrupted.\n";
+                break;
+            }
             std::cout << "Received END message. File transfer complete.\n";
             break;
         } else {

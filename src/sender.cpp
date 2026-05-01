@@ -5,6 +5,7 @@
 #include <fstream>
 #include "protocol.h"
 #include "socket_utils.h"
+#include "checksum_helper.h"
 const size_t CHUNK_SIZE = 64 * 1024;
 
 int main() {
@@ -76,8 +77,13 @@ int main() {
         chunk_id++;
     }
 
-    Header end_header{END, chunk_id, 0};
-    send_all(sock, &end_header, sizeof(end_header));
+    // Header end_header{END, chunk_id, 0};
+    // send_all(sock, &end_header, sizeof(end_header));
+
+    auto hash = compute_sha256("data.txt");
+    Header end_sha256_header{END, chunk_id, hash.size()};
+    send_all(sock, &end_sha256_header, sizeof(end_sha256_header));
+    send_all(sock, hash.data(), hash.size());
 
     std::cout << "File transfer completed." << std::endl;
 
