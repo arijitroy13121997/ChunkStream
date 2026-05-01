@@ -3,7 +3,7 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <fstream>
-const size_t CHUNK_SIZE = 64;
+const size_t CHUNK_SIZE = 64 * 1024;
 
 int main(){
     int server_fd, new_socket;
