@@ -7,6 +7,7 @@
 #include "socket_utils.h"
 #include "checksum_helper.h"
 #include "config_reader.h"
+#include <filesystem>
 
 int main(int argc, char *argv[])
 {
@@ -17,7 +18,8 @@ int main(int argc, char *argv[])
         cfg.file = argv[1];
     }
 
-    std::cout << "Using file: " << cfg.file << "\n";
+    std::string filename = std::filesystem::path(cfg.file).filename().string();
+    std::cout << "Using file: " << filename << "\n";
 
     int sock = 0;
     struct sockaddr_in serv_addr;
@@ -37,6 +39,7 @@ int main(int argc, char *argv[])
         perror("Invalid address or address not supported");
         return -1;
     }
+    std::cout << "Connecting to " << cfg.ip << ":" << cfg.port << "...\n";
 
     if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
     {
@@ -55,10 +58,10 @@ int main(int argc, char *argv[])
     size_t file_size = file.tellg();
     file.seekg(0, std::ios::beg);
 
-    std::string filename = cfg.file;
     uint32_t name_len = filename.size();
 
-    Header start_header{START, 0, sizeof(file_size) + name_len + sizeof(name_len)}; // Include header size in data_size
+    uint32_t meta_size = sizeof(file_size) + sizeof(name_len) + name_len;
+    Header start_header{START, 0, meta_size};
     send_all(sock, &start_header, sizeof(start_header));
 
     send_all(sock, &file_size, sizeof(file_size));
@@ -71,40 +74,67 @@ int main(int argc, char *argv[])
     char buffer[cfg.chunk_size];
     uint32_t chunk_id = 0;
 
-    while (!file.eof())
+    while (true)
     {
         file.read(buffer, cfg.chunk_size);
         std::streamsize bytes_read = file.gcount();
-
-        if (bytes_read <= 0)
+        if(bytes_read <= 0)
             break;
-        Header header{DATA, chunk_id, static_cast<uint32_t>(bytes_read)};
-        send_all(sock, &header, sizeof(header));
-        send_all(sock, buffer, bytes_read);
 
-        Header ack_header;
-        recv_all(sock, &ack_header, sizeof(ack_header));
-        if (ack_header.type != ACK || ack_header.chunk_id != chunk_id)
+        bool success = false;
+        int retries = 0;
+        while (!success && retries < 3)
         {
-            std::cerr << "Failed to receive ACK for chunk " << chunk_id << std::endl;
-            file.seekg(chunk_id * cfg.chunk_size, std::ios::beg); // Rewind to resend the chunk
-            continue;
+            Header header{DATA, chunk_id, static_cast<uint32_t>(bytes_read)};
+            if (send_all(sock, &header, sizeof(header)) < 0 || 
+                send_all(sock, buffer, bytes_read) < 0)
+            {
+                retries++;
+                std::cout << "Failed to send chunk " << chunk_id << ", retrying (" << retries << "/3)..." << std::endl;
+                continue;
+            }
+
+            Header ack_header;
+            if(recv_all(sock, &ack_header, sizeof(ack_header)) < 0 || 
+                ack_header.type != ACK || 
+                ack_header.chunk_id != chunk_id)
+            {
+                retries++;
+                std::cout << "Failed to receive ACK for chunk " << chunk_id << ", retrying (" << retries << "/3)..." << std::endl;
+                continue;
+            }
+            success = true;
+            std::cout << "Chunk " << chunk_id << " sent and ACK received." << std::endl;
+        }
+
+        if(!success){
+            std::cerr << "Failed to send chunk " << chunk_id << " after 3 attempts. Aborting transfer." << std::endl;
+            file.close();
+            close(sock);
+            return -1;
         }
         chunk_id++;
     }
 
-    // Header end_header{END, chunk_id, 0};
-    // send_all(sock, &end_header, sizeof(end_header));
+        // Header end_header{END, chunk_id, 0};
+        // send_all(sock, &end_header, sizeof(end_header));
 
-    auto hash = compute_sha256(cfg.file);
-    Header end_sha256_header{END, chunk_id, hash.size()};
-    send_all(sock, &end_sha256_header, sizeof(end_sha256_header));
-    send_all(sock, hash.data(), hash.size());
+        auto hash = compute_sha256(cfg.file);
+        Header end_sha256_header{END, chunk_id, hash.size()};
+        send_all(sock, &end_sha256_header, sizeof(end_sha256_header));
+        send_all(sock, hash.data(), hash.size());
 
-    std::cout << "File transfer completed." << std::endl;
+        if(recv_all(sock, buffer, sizeof(Header)) <= 0){
+            std::cerr << "Failed to receive final ACK from server. Aborting." << std::endl;
+            file.close();
+            close(sock);
+            return -1;
+        }
 
-    file.close();
-    close(sock);
+        std::cout << "File transfer completed & final ACK received." << std::endl;
 
-    return 0;
-}
+        file.close();
+        close(sock);
+
+        return 0;
+    }
