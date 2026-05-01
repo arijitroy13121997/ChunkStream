@@ -15,3 +15,5 @@ add_executable(receiver src/receiver.cpp src/socket_utils.cpp)
 
 target_link_libraries(sender OpenSSL::Crypto nlohmann_json::nlohmann_json)
 target_link_libraries(receiver OpenSSL::Crypto nlohmann_json::nlohmann_json)
+
+configure_file(cfg/data.txt data.txt COPYONLY)

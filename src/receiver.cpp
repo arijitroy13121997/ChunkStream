@@ -75,7 +75,7 @@ int main(){
     }
     filename_buffer[name_len] = '\0'; //For safety, null-terminate the filename
     std::string filename(filename_buffer);
-    filename += "_received"; // Append .received to avoid overwriting existing files
+    filename = "received_" + filename; // Append .received to avoid overwriting existing files
     std::ofstream output_file(filename, std::ios::binary);
     if(!output_file){
         std::cerr << "Could not open output file: " << filename << "\n";

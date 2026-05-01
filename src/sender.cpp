@@ -8,13 +8,23 @@
 #include "checksum_helper.h"
 #include "config_reader.h"
 
-int main() {
+int main(int argc, char *argv[])
+{
     Config cfg = load_cfg();
+
+    if (argc > 1)
+    {
+        cfg.file = argv[1];
+    }
+
+    std::cout << "Using file: " << cfg.file << "\n";
+
     int sock = 0;
     struct sockaddr_in serv_addr;
 
     sock = socket(AF_INET, SOCK_STREAM, 0);
-    if (sock < 0) {
+    if (sock < 0)
+    {
         perror("Socket creation error");
         return -1;
     }
@@ -22,18 +32,21 @@ int main() {
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(cfg.port);
 
-    if(inet_pton(AF_INET, cfg.ip.c_str(), &serv_addr.sin_addr)<=0) {
+    if (inet_pton(AF_INET, cfg.ip.c_str(), &serv_addr.sin_addr) <= 0)
+    {
         perror("Invalid address or address not supported");
         return -1;
     }
 
-    if(connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
+    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+    {
         perror("Connection Failed");
         return -1;
     }
 
     std::ifstream file(cfg.file, std::ios::binary);
-    if (!file) {
+    if (!file)
+    {
         std::cerr << "Could not open file " << cfg.file << std::endl;
         return -1;
     }
@@ -58,11 +71,12 @@ int main() {
     char buffer[cfg.chunk_size];
     uint32_t chunk_id = 0;
 
-    while(!file.eof()) {
+    while (!file.eof())
+    {
         file.read(buffer, cfg.chunk_size);
         std::streamsize bytes_read = file.gcount();
 
-        if(bytes_read <= 0)
+        if (bytes_read <= 0)
             break;
         Header header{DATA, chunk_id, static_cast<uint32_t>(bytes_read)};
         send_all(sock, &header, sizeof(header));
@@ -70,7 +84,8 @@ int main() {
 
         Header ack_header;
         recv_all(sock, &ack_header, sizeof(ack_header));
-        if(ack_header.type != ACK || ack_header.chunk_id != chunk_id) {
+        if (ack_header.type != ACK || ack_header.chunk_id != chunk_id)
+        {
             std::cerr << "Failed to receive ACK for chunk " << chunk_id << std::endl;
             file.seekg(chunk_id * cfg.chunk_size, std::ios::beg); // Rewind to resend the chunk
             continue;
