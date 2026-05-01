@@ -1,20 +1,24 @@
-#include <iostream>
-#include <cstring>
-#include <unistd.h>
-#include <arpa/inet.h>
-#include <fstream>
-#include "protocol.h"
-#include "socket_utils.h"
-#include "checksum_helper.h"
-#include "config_reader.h"
+#include "common_helper.h"
 #include <atomic>
 #include <csignal>
+#include <thread>
+#include <queue>
+#include <mutex>
+#include <condition_variable>
 
 
 std::atomic<bool> g_running(true);
+int server_fd_global = -1;
+std::queue<int> client_queue;
+std::mutex queue_mutex;
+std::condition_variable cv{};
+Config cfg{};
 
-void handle_sigint(int) {
+void handle_sigint(int)
+{
     g_running = false;
+    if (server_fd_global != -1)
+        close(server_fd_global);
 }
 
 int handle_transfer(int new_socket, const Config &cfg)
@@ -59,8 +63,13 @@ int handle_transfer(int new_socket, const Config &cfg)
     }
     filename_buffer[name_len] = '\0'; // For safety, null-terminate the filename
     std::string filename(filename_buffer);
-    filename = "received_" + filename;
+
+    static std::atomic<int> counter{0};
+
+    filename = (counter == 0) ? "received_" + filename : "received_" + std::to_string(counter) + "_" + filename;
     std::string temp_filename = filename + ".tmp";
+    counter++;
+
     std::ofstream output_file(temp_filename, std::ios::binary);
     if (!output_file)
     {
@@ -125,7 +134,7 @@ int handle_transfer(int new_socket, const Config &cfg)
                 break;
             }
 
-            if(received_bytes != file_size)
+            if (received_bytes != file_size)
             {
                 std::remove(temp_filename.c_str());
                 std::cerr << "File size mismatch! Expected " << file_size << " bytes but received " << received_bytes << " bytes.\n";
@@ -152,17 +161,44 @@ int handle_transfer(int new_socket, const Config &cfg)
     return 0;
 }
 
+void worker()
+{
+    while (g_running)
+    {
+        int client = -1;
+        {
+            std::unique_lock<std::mutex> lock(queue_mutex);
+
+            cv.wait(lock, []
+                    { return !client_queue.empty() || !g_running; });
+
+            if (client_queue.empty())
+                continue;
+
+            client = client_queue.front();
+            client_queue.pop();
+        }
+
+        handle_transfer(client, cfg);
+        close(client);
+    }
+}
+
 int main()
 {
 
     std::signal(SIGINT, handle_sigint);
 
-    Config cfg = load_cfg();
+    cfg = load_cfg();
+    std::vector<std::thread> th_pool;
+
+    for (int i = 0; i < cfg.thread_count; i++)
+        th_pool.emplace_back(worker);
+
     int server_fd, new_socket;
     struct sockaddr_in address;
     int addrlen = sizeof(address);
     server_fd = socket(AF_INET, SOCK_STREAM, 0);
-
 
     if (server_fd == 0)
     {
@@ -176,6 +212,7 @@ int main()
 
     int opt = 1;
     setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+    server_fd_global = server_fd;
 
     if (bind(server_fd, (struct sockaddr *)&address, addrlen) < 0)
     {
@@ -193,18 +230,30 @@ int main()
 
     while (g_running)
     {
-        new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen);
-        if (new_socket < 0)
+        int client = accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen);
+        if (client < 0)
         {
+            if (errno == EINTR)
+                break;
             perror("Accept error");
             continue;
         }
-        int result = handle_transfer(new_socket, cfg);
-        if (result < 0)
-            std::cerr << "Error during file transfer with client.\n";
 
-        close(new_socket);
+        {
+            std::unique_lock<std::mutex> lock(queue_mutex);
+            client_queue.push(client);
+        }
+        cv.notify_one();
     }
+
+    cv.notify_all();
+
+    for (auto &t : th_pool)
+    {
+        if (t.joinable())
+            t.join();
+    }
+
     close(server_fd);
 
     return 0;

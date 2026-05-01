@@ -1,12 +1,4 @@
-#include <iostream>
-#include <arpa/inet.h>
-#include <unistd.h>
-#include <cstring>
-#include <fstream>
-#include "protocol.h"
-#include "socket_utils.h"
-#include "checksum_helper.h"
-#include "config_reader.h"
+#include "common_helper.h"
 #include <filesystem>
 
 int main(int argc, char *argv[])
@@ -78,7 +70,7 @@ int main(int argc, char *argv[])
     {
         file.read(buffer, cfg.chunk_size);
         std::streamsize bytes_read = file.gcount();
-        if(bytes_read <= 0)
+        if (bytes_read <= 0)
             break;
 
         bool success = false;
@@ -86,7 +78,7 @@ int main(int argc, char *argv[])
         while (!success && retries < 3)
         {
             Header header{DATA, chunk_id, static_cast<uint32_t>(bytes_read)};
-            if (send_all(sock, &header, sizeof(header)) < 0 || 
+            if (send_all(sock, &header, sizeof(header)) < 0 ||
                 send_all(sock, buffer, bytes_read) < 0)
             {
                 retries++;
@@ -95,19 +87,21 @@ int main(int argc, char *argv[])
             }
 
             Header ack_header;
-            if(recv_all(sock, &ack_header, sizeof(ack_header)) < 0 || 
-                ack_header.type != ACK || 
+            if (recv_all(sock, &ack_header, sizeof(ack_header)) < 0 ||
+                ack_header.type != ACK ||
                 ack_header.chunk_id != chunk_id)
             {
                 retries++;
                 std::cout << "Failed to receive ACK for chunk " << chunk_id << ", retrying (" << retries << "/3)..." << std::endl;
                 continue;
             }
+
             success = true;
             std::cout << "Chunk " << chunk_id << " sent and ACK received." << std::endl;
         }
 
-        if(!success){
+        if (!success)
+        {
             std::cerr << "Failed to send chunk " << chunk_id << " after 3 attempts. Aborting transfer." << std::endl;
             file.close();
             close(sock);
@@ -116,25 +110,26 @@ int main(int argc, char *argv[])
         chunk_id++;
     }
 
-        // Header end_header{END, chunk_id, 0};
-        // send_all(sock, &end_header, sizeof(end_header));
+    // Header end_header{END, chunk_id, 0};
+    // send_all(sock, &end_header, sizeof(end_header));
 
-        auto hash = compute_sha256(cfg.file);
-        Header end_sha256_header{END, chunk_id, hash.size()};
-        send_all(sock, &end_sha256_header, sizeof(end_sha256_header));
-        send_all(sock, hash.data(), hash.size());
+    auto hash = compute_sha256(cfg.file);
+    Header end_sha256_header{END, chunk_id, hash.size()};
+    send_all(sock, &end_sha256_header, sizeof(end_sha256_header));
+    send_all(sock, hash.data(), hash.size());
 
-        if(recv_all(sock, buffer, sizeof(Header)) <= 0){
-            std::cerr << "Failed to receive final ACK from server. Aborting." << std::endl;
-            file.close();
-            close(sock);
-            return -1;
-        }
-
-        std::cout << "File transfer completed & final ACK received." << std::endl;
-
+    if (recv_all(sock, buffer, sizeof(Header)) <= 0)
+    {
+        std::cerr << "Failed to receive final ACK from server. Aborting." << std::endl;
         file.close();
         close(sock);
-
-        return 0;
+        return -1;
     }
+
+    std::cout << "File transfer completed & final ACK received." << std::endl;
+
+    file.close();
+    close(sock);
+
+    return 0;
+}

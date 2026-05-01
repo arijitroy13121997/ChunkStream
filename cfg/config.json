@@ -1,6 +1,7 @@
 {
-  "ip": "127.0.0.1",
-  "port": 8081,
-  "file": "data.txt",
-  "chunk_size": 65536
+    "ip": "127.0.0.1",
+    "port": 8080,
+    "file": "data.txt",
+    "chunk_size": 65536,
+    "thread_count": 4
 }

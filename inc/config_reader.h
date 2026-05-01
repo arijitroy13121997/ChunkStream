@@ -10,11 +10,14 @@ struct Config
     std::string file;
     std::string output;
     size_t chunk_size;
+    int thread_count;
 };
 
-Config load_cfg(){
+Config load_cfg()
+{
     std::ifstream f(CONFIG_PATH);
-    if(!f){
+    if (!f)
+    {
         throw std::runtime_error("Could not open config.json");
     }
     json j;
@@ -25,6 +28,6 @@ Config load_cfg(){
     cfg.port = j["port"];
     cfg.file = j["file"];
     cfg.chunk_size = j["chunk_size"];
- 
+    cfg.thread_count = j["thread_count"];
     return cfg;
 }
