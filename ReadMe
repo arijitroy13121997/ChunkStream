@@ -1,14 +1,155 @@
-For setting up in linux
-    1. Run setup.sh in the project root directory:
-    2. chmod +x setup.sh
-    3. ./setup.sh
+# ChunkStream
 
-For setting up in windows
-    1. Install MSYS2 → https://www.msys2.org/
-    2. Open "MSYS2 MinGW64"
-    3. Run:
-    pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake mingw-w64-x86_64-openssl mingw-w64-x86_64-nlohmann-json
-    4. Build:
-    mkdir build && cd build
-    cmake .. -G "MinGW Makefiles"
-    mingw32-make
+ChunkStream is a C++17 TCP file transfer application. The sender reads a file, splits it into chunks, sends each chunk to the receiver, and sends a final SHA-256 hash so the receiver can verify file integrity.
+
+## Requirements
+
+Linux:
+
+```bash
+chmod +x setup.sh
+./setup.sh
+```
+
+Manual dependencies:
+
+```bash
+sudo apt install -y build-essential cmake libssl-dev nlohmann-json3-dev libgtest-dev
+```
+
+Windows with MSYS2 MinGW64:
+
+```bash
+pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake mingw-w64-x86_64-openssl mingw-w64-x86_64-nlohmann-json
+```
+
+## Build
+
+From the project root:
+
+```bash
+cmake -S . -B build
+cmake --build build
+```
+
+This builds:
+
+- `build/sender`
+- `build/receiver`
+- `build/chunkstream_test` on Linux when GoogleTest is available
+
+## Clean
+
+Remove the build directory:
+
+```bash
+rm -rf build
+```
+
+Then rebuild:
+
+```bash
+cmake -S . -B build
+cmake --build build
+```
+
+To clean only compiled artifacts while keeping the build configuration:
+
+```bash
+cmake --build build --target clean
+```
+
+## Configuration
+
+Runtime settings are stored in:
+
+```bash
+cfg/config.json
+```
+
+Example:
+
+```json
+{
+    "ip": "127.0.0.1",
+    "port": 8080,
+    "file": "data.txt",
+    "chunk_size": 65536,
+    "thread_count": 4
+}
+```
+
+Fields:
+
+- `ip`: receiver IP address used by the sender
+- `port`: TCP port used by sender and receiver
+- `file`: default file sent by the sender
+- `chunk_size`: number of bytes per transferred chunk
+- `thread_count`: number of receiver worker threads
+
+## Run
+
+Open two terminals from the project root.
+
+Terminal 1: start the receiver.
+
+```bash
+./build/receiver
+```
+
+Terminal 2: start the sender with the configured file.
+
+```bash
+./build/sender
+```
+
+To send a specific file:
+
+```bash
+./build/sender path/to/file.txt or ./build/sender
+```
+
+The receiver writes the received file using a `received_` prefix. During transfer it writes to a temporary `.tmp` file and renames it after the size and SHA-256 checks pass.
+
+## Run Tests
+
+Build first:
+
+```bash
+cmake -S . -B build
+cmake --build build
+```
+
+Run tests:
+
+```bash
+ctest --test-dir build --output-on-failure
+```
+
+Or run the test executable directly:
+
+```bash
+./build/chunkstream_test
+```
+
+## Project Layout
+
+```text
+cfg/                 Configuration and sample data
+docs/                Draw.io diagrams
+inc/                 Header files
+src/                 Application source files
+tests/               GoogleTest tests
+CMakeLists.txt       Build configuration
+setup.sh             Linux dependency setup
+```
+
+## Diagrams
+
+Draw.io diagrams are available in:
+
+```bash
+docs/diagrams.drawio
+```
+
+The diagram file includes C4, sequence, and class/module views.

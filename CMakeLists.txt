@@ -24,8 +24,8 @@ endif()
 
 configure_file(cfg/data.txt data.txt COPYONLY)
 
-#GETST
-if (!WIN32)
+# Tests
+if (NOT WIN32)
 add_executable(chunkstream_test 
     tests/gtest.cpp
     src/handle_transfer.cpp
@@ -35,7 +35,8 @@ add_executable(chunkstream_test
 target_link_libraries(chunkstream_test 
                         gtest 
                         pthread 
-                        OpenSSL::Crypto)
+                        OpenSSL::Crypto
+                        nlohmann_json::nlohmann_json)
 
 add_test(NAME ChunkStreamTest COMMAND chunkstream_test)
 endif()
