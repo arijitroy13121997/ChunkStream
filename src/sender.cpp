@@ -1,8 +1,9 @@
-#include "common_helper.h"
+#include "platform.h"
 #include <filesystem>
 
 int main(int argc, char *argv[])
 {
+    init_sockets();
     Config cfg = load_cfg();
 
     if (argc > 1)
@@ -104,7 +105,7 @@ int main(int argc, char *argv[])
         {
             std::cerr << "Failed to send chunk " << chunk_id << " after 3 attempts. Aborting transfer." << std::endl;
             file.close();
-            close(sock);
+            CLOSE_SOCKET(sock);
             return -1;
         }
         chunk_id++;
@@ -122,14 +123,15 @@ int main(int argc, char *argv[])
     {
         std::cerr << "Failed to receive final ACK from server. Aborting." << std::endl;
         file.close();
-        close(sock);
+        CLOSE_SOCKET(sock);
         return -1;
     }
 
     std::cout << "File transfer completed & final ACK received." << std::endl;
 
     file.close();
-    close(sock);
+    CLOSE_SOCKET(sock);
+    cleanup_sockets();
 
     return 0;
 }

@@ -1,11 +1,10 @@
-#include "common_helper.h"
+#include "platform.h"
 #include <atomic>
 #include <csignal>
 #include <thread>
 #include <queue>
 #include <mutex>
 #include <condition_variable>
-
 
 std::atomic<bool> g_running(true);
 int server_fd_global = -1;
@@ -18,7 +17,7 @@ void handle_sigint(int)
 {
     g_running = false;
     if (server_fd_global != -1)
-        close(server_fd_global);
+        CLOSE_SOCKET(server_fd_global);
 }
 
 int handle_transfer(int new_socket, const Config &cfg)
@@ -180,7 +179,7 @@ void worker()
         }
 
         handle_transfer(client, cfg);
-        close(client);
+        CLOSE_SOCKET(client);
     }
 }
 
@@ -188,6 +187,8 @@ int main()
 {
 
     std::signal(SIGINT, handle_sigint);
+
+    init_sockets();
 
     cfg = load_cfg();
     std::vector<std::thread> th_pool;
@@ -211,7 +212,11 @@ int main()
     address.sin_port = htons(cfg.port);
 
     int opt = 1;
+#ifdef _WIN32
+    setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, (const char *)&opt, sizeof(opt));
+#else
     setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+#endif
     server_fd_global = server_fd;
 
     if (bind(server_fd, (struct sockaddr *)&address, addrlen) < 0)
@@ -254,7 +259,8 @@ int main()
             t.join();
     }
 
-    close(server_fd);
+    CLOSE_SOCKET(server_fd);
+    cleanup_sockets();
 
     return 0;
 }

@@ -10,10 +10,15 @@ add_definitions(-DCONFIG_PATH="${CMAKE_CURRENT_SOURCE_DIR}/cfg/config.json")
 
 include_directories(inc)
 
-add_executable(sender src/sender.cpp src/socket_utils.cpp)
+add_executable(sender_1 src/sender.cpp src/socket_utils.cpp)
 add_executable(receiver src/receiver.cpp src/socket_utils.cpp)
 
-target_link_libraries(sender OpenSSL::Crypto nlohmann_json::nlohmann_json)
+target_link_libraries(sender_1 OpenSSL::Crypto nlohmann_json::nlohmann_json)
 target_link_libraries(receiver OpenSSL::Crypto nlohmann_json::nlohmann_json)
+
+if (WIN32)
+    target_link_libraries(sender_1 ws2_32)
+    target_link_libraries(receiver ws2_32)
+endif()
 
 configure_file(cfg/data.txt data.txt COPYONLY)

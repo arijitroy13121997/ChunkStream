@@ -1,3 +1,4 @@
+#pragma once
 #include <nlohmann/json.hpp>
 #include <fstream>
 
@@ -13,7 +14,7 @@ struct Config
     int thread_count;
 };
 
-Config load_cfg()
+inline Config load_cfg()
 {
     std::ifstream f(CONFIG_PATH);
     if (!f)

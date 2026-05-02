@@ -1,8 +1,10 @@
+#pragma once
+
 #include <openssl/sha.h>
 #include <vector>
 #include <array>
 
-std::array<unsigned char, SHA256_DIGEST_LENGTH> compute_sha256(const std::string filename)
+inline std::array<unsigned char, SHA256_DIGEST_LENGTH> compute_sha256(const std::string filename)
 {
     std::ifstream file(filename, std::ios::binary);
     if (!file)

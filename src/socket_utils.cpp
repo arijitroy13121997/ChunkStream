@@ -1,6 +1,4 @@
 #include "socket_utils.h"
-#include <unistd.h>
-#include <sys/socket.h>
 
 ssize_t send_all(int sock, const void *data, size_t len)
 {
@@ -8,7 +6,7 @@ ssize_t send_all(int sock, const void *data, size_t len)
     const char *ptr = static_cast<const char *>(data);
     while (total_sent < len)
     {
-        ssize_t sent = send(sock, ptr + total_sent, len - total_sent, MSG_NOSIGNAL);
+        ssize_t sent = send(sock, ptr + total_sent, len - total_sent, SEND_FLAGS);
         if (sent <= 0)
             return sent;
         total_sent += sent;
