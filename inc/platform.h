@@ -22,6 +22,7 @@
 
     #define CLOSE_SOCKET closesocket
     #define GET_ERROR WSAGetLastError()
+    #define SHUTDOWN_BOTH SD_BOTH
 
     inline void init_sockets() {
         WSADATA wsa;
@@ -42,6 +43,7 @@
     #define CLOSE_SOCKET close
     #define GET_ERROR errno
     #define SEND_FLAGS MSG_NOSIGNAL
+    #define SHUTDOWN_BOTH SHUT_RDWR
 
     inline void init_sockets() {}
     inline void cleanup_sockets() {}

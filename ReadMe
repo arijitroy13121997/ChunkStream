@@ -1,0 +1,14 @@
+For setting up in linux
+    1. Run setup.sh in the project root directory:
+    2. chmod +x setup.sh
+    3. ./setup.sh
+
+For setting up in windows
+    1. Install MSYS2 → https://www.msys2.org/
+    2. Open "MSYS2 MinGW64"
+    3. Run:
+    pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake mingw-w64-x86_64-openssl mingw-w64-x86_64-nlohmann-json
+    4. Build:
+    mkdir build && cd build
+    cmake .. -G "MinGW Makefiles"
+    mingw32-make

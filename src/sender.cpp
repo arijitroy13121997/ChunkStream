@@ -3,8 +3,8 @@
 
 int main(int argc, char *argv[])
 {
-    init_sockets();
     Config cfg = load_cfg();
+    init_sockets();
 
     if (argc > 1)
     {
@@ -14,13 +14,14 @@ int main(int argc, char *argv[])
     std::string filename = std::filesystem::path(cfg.file).filename().string();
     std::cout << "Using file: " << filename << "\n";
 
-    int sock = 0;
-    struct sockaddr_in serv_addr;
+    int sock = -1;
+    struct sockaddr_in serv_addr{};
 
     sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock < 0)
     {
         perror("Socket creation error");
+        cleanup_sockets();
         return -1;
     }
 
@@ -30,6 +31,8 @@ int main(int argc, char *argv[])
     if (inet_pton(AF_INET, cfg.ip.c_str(), &serv_addr.sin_addr) <= 0)
     {
         perror("Invalid address or address not supported");
+        CLOSE_SOCKET(sock);
+        cleanup_sockets();
         return -1;
     }
     std::cout << "Connecting to " << cfg.ip << ":" << cfg.port << "...\n";
@@ -37,6 +40,8 @@ int main(int argc, char *argv[])
     if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
     {
         perror("Connection Failed");
+        CLOSE_SOCKET(sock);
+        cleanup_sockets();
         return -1;
     }
 
@@ -44,6 +49,8 @@ int main(int argc, char *argv[])
     if (!file)
     {
         std::cerr << "Could not open file " << cfg.file << std::endl;
+        CLOSE_SOCKET(sock);
+        cleanup_sockets();
         return -1;
     }
 
@@ -55,11 +62,17 @@ int main(int argc, char *argv[])
 
     uint32_t meta_size = sizeof(file_size) + sizeof(name_len) + name_len;
     Header start_header{START, 0, meta_size};
-    send_all(sock, &start_header, sizeof(start_header));
-
-    send_all(sock, &file_size, sizeof(file_size));
-    send_all(sock, &name_len, sizeof(name_len));
-    send_all(sock, filename.c_str(), name_len);
+    if (send_all(sock, &start_header, sizeof(start_header)) <= 0 ||
+        send_all(sock, &file_size, sizeof(file_size)) <= 0 ||
+        send_all(sock, &name_len, sizeof(name_len)) <= 0 ||
+        send_all(sock, filename.c_str(), name_len) <= 0)
+    {
+        std::cerr << "Failed to send file metadata. Aborting transfer." << std::endl;
+        file.close();
+        CLOSE_SOCKET(sock);
+        cleanup_sockets();
+        return -1;
+    }
 
     // send(sock, &file_size, sizeof(file_size), MSG_NOSIGNAL);
     // std::cout << "Sending file of size: " << file_size << " bytes" << std::endl;
@@ -79,8 +92,8 @@ int main(int argc, char *argv[])
         while (!success && retries < 3)
         {
             Header header{DATA, chunk_id, static_cast<uint32_t>(bytes_read)};
-            if (send_all(sock, &header, sizeof(header)) < 0 ||
-                send_all(sock, buffer, bytes_read) < 0)
+            if (send_all(sock, &header, sizeof(header)) <= 0 ||
+                send_all(sock, buffer, bytes_read) <= 0)
             {
                 retries++;
                 std::cout << "Failed to send chunk " << chunk_id << ", retrying (" << retries << "/3)..." << std::endl;
@@ -88,7 +101,7 @@ int main(int argc, char *argv[])
             }
 
             Header ack_header;
-            if (recv_all(sock, &ack_header, sizeof(ack_header)) < 0 ||
+            if (recv_all(sock, &ack_header, sizeof(ack_header)) <= 0 ||
                 ack_header.type != ACK ||
                 ack_header.chunk_id != chunk_id)
             {
@@ -106,6 +119,7 @@ int main(int argc, char *argv[])
             std::cerr << "Failed to send chunk " << chunk_id << " after 3 attempts. Aborting transfer." << std::endl;
             file.close();
             CLOSE_SOCKET(sock);
+            cleanup_sockets();
             return -1;
         }
         chunk_id++;
@@ -116,14 +130,22 @@ int main(int argc, char *argv[])
 
     auto hash = compute_sha256(cfg.file);
     Header end_sha256_header{END, chunk_id, hash.size()};
-    send_all(sock, &end_sha256_header, sizeof(end_sha256_header));
-    send_all(sock, hash.data(), hash.size());
+    if (send_all(sock, &end_sha256_header, sizeof(end_sha256_header)) <= 0 ||
+        send_all(sock, hash.data(), hash.size()) <= 0)
+    {
+        std::cerr << "Failed to send file hash. Aborting transfer." << std::endl;
+        file.close();
+        CLOSE_SOCKET(sock);
+        cleanup_sockets();
+        return -1;
+    }
 
     if (recv_all(sock, buffer, sizeof(Header)) <= 0)
     {
         std::cerr << "Failed to receive final ACK from server. Aborting." << std::endl;
         file.close();
         CLOSE_SOCKET(sock);
+        cleanup_sockets();
         return -1;
     }
 
