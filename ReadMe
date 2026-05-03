@@ -1,67 +1,125 @@
 # ChunkStream
 
-ChunkStream is a C++17 TCP file transfer application. The sender reads a file, splits it into chunks, sends each chunk to the receiver, and sends a final SHA-256 hash so the receiver can verify file integrity.
+## Overview
+
+ChunkStream is a C++17 TCP-based file transfer utility designed to reliably transfer large files (up to 16GB) across networked systems.
+
+Features:
+
+* Chunk-based file transfer
+* End-to-end integrity verification using SHA-256
+* Error handling with retry mechanism
+* Multi-client support using a thread pool
+* Cross-platform compatibility (Linux and Windows)
+
+---
+
+## Architecture
+
+### Components
+
+Sender:
+
+* Reads file from disk
+* Splits file into fixed-size chunks
+* Sends chunks sequentially with acknowledgement
+
+Receiver:
+
+* Accepts incoming connections
+* Processes protocol messages
+* Writes data to a temporary file
+* Verifies integrity and finalizes file
+
+Core Modules:
+
+* protocol.h - message structure
+* socket_utils.cpp - send/receive abstraction
+* checksum_helper.cpp - SHA-256 computation
+* handle_transfer.cpp - core transfer logic
+
+---
+
+## Protocol
+
+Message Types:
+
+| Type  | Description     |
+| ----- | --------------- |
+| START | Begin transfer  |
+| DATA  | File chunk      |
+| ACK   | Acknowledgement |
+| END   | Final hash      |
+
+Flow:
+
+Sender → START → Receiver
+Sender → DATA → Receiver → ACK
+(repeat)
+Sender → END(hash) → Receiver
+Receiver → END ACK → Sender
+
+---
 
 ## Requirements
 
-Linux:
+### Linux
 
 ```bash
 chmod +x setup.sh
 ./setup.sh
 ```
 
-Manual dependencies:
+Manual installation:
 
 ```bash
 sudo apt install -y build-essential cmake libssl-dev nlohmann-json3-dev libgtest-dev
 ```
 
-Windows with MSYS2 MinGW64:
+### Windows (MSYS2 MinGW64)
 
 ```bash
 pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake mingw-w64-x86_64-openssl mingw-w64-x86_64-nlohmann-json
 ```
 
+---
+
 ## Build
 
-From the project root:
-
 ```bash
 cmake -S . -B build
 cmake --build build
 ```
 
-This builds:
+Generated binaries:
 
-- `build/sender`
-- `build/receiver`
-- `build/chunkstream_test` on Linux when GoogleTest is available
+* build/sender
+* build/receiver
+* build/chunkstream_test (if tests are enabled)
 
-## Clean
+---
 
-Remove the build directory:
+## Usage
 
-```bash
-rm -rf build
-```
-
-Then rebuild:
+Start receiver:
 
 ```bash
-cmake -S . -B build
-cmake --build build
+./build/receiver
 ```
 
-To clean only compiled artifacts while keeping the build configuration:
+Run sender:
 
 ```bash
-cmake --build build --target clean
+./build/sender <file_path>
 ```
+
+If no file is provided, the default file from configuration is used.
+
+---
 
 ## Configuration
 
-Runtime settings are stored in:
+Configuration file:
 
 ```bash
 cfg/config.json
@@ -79,77 +137,64 @@ Example:
 }
 ```
 
-Fields:
+---
 
-- `ip`: receiver IP address used by the sender
-- `port`: TCP port used by sender and receiver
-- `file`: default file sent by the sender
-- `chunk_size`: number of bytes per transferred chunk
-- `thread_count`: number of receiver worker threads
+## Testing
 
-## Run
-
-Open two terminals from the project root.
-
-Terminal 1: start the receiver.
-
-```bash
-./build/receiver
-```
-
-Terminal 2: start the sender with the configured file.
-
-```bash
-./build/sender
-```
-
-To send a specific file:
-
-```bash
-./build/sender path/to/file.txt or ./build/sender
-```
-
-The receiver writes the received file using a `received_` prefix. During transfer it writes to a temporary `.tmp` file and renames it after the size and SHA-256 checks pass.
-
-## Run Tests
-
-Build first:
-
-```bash
-cmake -S . -B build
-cmake --build build
-```
-
-Run tests:
+Run all tests:
 
 ```bash
 ctest --test-dir build --output-on-failure
 ```
 
-Or run the test executable directly:
+Or run directly:
 
 ```bash
 ./build/chunkstream_test
 ```
 
-## Project Layout
+Test coverage includes:
+
+* Basic transfer
+* Hash mismatch detection
+* Multi-chunk transfer
+* Empty file transfer
+* Client disconnect handling
+
+---
+
+## Cross-Platform Support
+
+Handled differences:
+
+* POSIX vs Winsock APIs
+* close vs closesocket
+* ssize_t compatibility
+* Windows linking (ws2_32)
+
+---
+
+
+## Project Structure
 
 ```text
-cfg/                 Configuration and sample data
-docs/                Draw.io diagrams
+cfg/                 Configuration files
+docs/                Diagrams (C4, sequence, etc.)
 inc/                 Header files
-src/                 Application source files
+src/                 Source code
 tests/               GoogleTest tests
 CMakeLists.txt       Build configuration
-setup.sh             Linux dependency setup
+setup.sh             Linux setup script
 ```
+
+---
 
 ## Diagrams
 
-Draw.io diagrams are available in:
+Architecture diagrams are available in:
 
 ```bash
 docs/diagrams.drawio
 ```
 
-The diagram file includes C4, sequence, and class/module views.
+---
