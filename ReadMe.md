@@ -197,4 +197,8 @@ Architecture diagrams are available in:
 docs/diagrams.drawio
 ```
 
+## Note
+* Compression(zlib, lz4 etc.) is not used as it adds complexity and CPU overhead while giving little benefit for many file types.
+
+
 ---
