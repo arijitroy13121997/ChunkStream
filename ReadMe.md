@@ -40,6 +40,16 @@ Core Modules:
 
 ---
 
+## Design Decisions
+
+* Chunk-based transfer is used to support large files and reduce memory usage
+* Stop-and-wait protocol ensures reliability with simple implementation
+* Compression is not used to avoid CPU overhead and complexity
+* Temporary file is used to prevent exposing incomplete data
+* Thread pool is used for handling multiple clients efficiently
+
+---
+
 ## Protocol
 
 Message Types:
@@ -186,6 +196,18 @@ tests/               GoogleTest tests
 CMakeLists.txt       Build configuration
 setup.sh             Linux setup script
 ```
+
+---
+
+## Error Handling
+
+The system handles the following error scenarios:
+
+* Connection loss during transfer → transfer aborted and temporary file removed
+* Chunk send/ACK failure → retry up to 3 times
+* Invalid or unexpected message types → connection terminated
+* File size mismatch → file discarded
+* SHA-256 mismatch → file deleted to prevent corruption
 
 ---
 
