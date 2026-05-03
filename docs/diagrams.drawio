@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="chunkstream-c4-context" name="Context">
-        <mxGraphModel dx="740" dy="702" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+        <mxGraphModel dx="740" dy="561" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -40,8 +40,8 @@
             </root>
         </mxGraphModel>
     </diagram>
-    <diagram id="chunkstream-c4-containers" name="C4 - Containers">
-        <mxGraphModel dx="740" dy="702" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+    <diagram id="chunkstream-c4-containers" name="Containers">
+        <mxGraphModel dx="740" dy="561" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -139,108 +139,108 @@
             </root>
         </mxGraphModel>
     </diagram>
-    <diagram id="CbaZyiGmzpJk0XdPsd2m" name="Page-3">
-        <mxGraphModel dx="740" dy="702" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+    <diagram id="CbaZyiGmzpJk0XdPsd2m" name="Sequence">
+        <mxGraphModel dx="740" dy="561" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
-                <mxCell id="Hv8wDZ6hhEGuXk5tbz0J-1" value="File Transfer Sequence" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=24;fontStyle=1" vertex="1" parent="1">
+                <mxCell id="Hv8wDZ6hhEGuXk5tbz0J-1" value="Sequence Diagram" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=24;fontStyle=1" parent="1" vertex="1">
                     <mxGeometry x="60" y="30" width="620" height="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="Hv8wDZ6hhEGuXk5tbz0J-2" value="Sender" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fontSize=14;fontStyle=1" vertex="1" parent="1">
+                <mxCell id="Hv8wDZ6hhEGuXk5tbz0J-2" value="Sender" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fontSize=14;fontStyle=1" parent="1" vertex="1">
                     <mxGeometry x="90" y="90" width="150" height="50" as="geometry"/>
                 </mxCell>
-                <mxCell id="Hv8wDZ6hhEGuXk5tbz0J-3" value="Receiver Server" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fontSize=14;fontStyle=1" vertex="1" parent="1">
+                <mxCell id="Hv8wDZ6hhEGuXk5tbz0J-3" value="Receiver Server" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fontSize=14;fontStyle=1" parent="1" vertex="1">
                     <mxGeometry x="390" y="90" width="160" height="50" as="geometry"/>
                 </mxCell>
-                <mxCell id="Hv8wDZ6hhEGuXk5tbz0J-4" value="Transfer Handler" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fontSize=14;fontStyle=1" vertex="1" parent="1">
+                <mxCell id="Hv8wDZ6hhEGuXk5tbz0J-4" value="Transfer Handler" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fontSize=14;fontStyle=1" parent="1" vertex="1">
                     <mxGeometry x="690" y="90" width="170" height="50" as="geometry"/>
                 </mxCell>
-                <mxCell id="Hv8wDZ6hhEGuXk5tbz0J-5" value="File System" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fontSize=14;fontStyle=1" vertex="1" parent="1">
+                <mxCell id="Hv8wDZ6hhEGuXk5tbz0J-5" value="File System" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fontSize=14;fontStyle=1" parent="1" vertex="1">
                     <mxGeometry x="970" y="90" width="150" height="50" as="geometry"/>
                 </mxCell>
-                <mxCell id="Hv8wDZ6hhEGuXk5tbz0J-6" value="" style="endArrow=none;html=1;rounded=0;dashed=1;strokeColor=#777777;" edge="1" parent="1">
+                <mxCell id="Hv8wDZ6hhEGuXk5tbz0J-6" value="" style="endArrow=none;html=1;rounded=0;dashed=1;strokeColor=#777777;" parent="1" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="165" y="140" as="sourcePoint"/>
                         <mxPoint x="165" y="730" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="Hv8wDZ6hhEGuXk5tbz0J-7" value="" style="endArrow=none;html=1;rounded=0;dashed=1;strokeColor=#777777;" edge="1" parent="1">
+                <mxCell id="Hv8wDZ6hhEGuXk5tbz0J-7" value="" style="endArrow=none;html=1;rounded=0;dashed=1;strokeColor=#777777;" parent="1" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="470" y="140" as="sourcePoint"/>
                         <mxPoint x="470" y="730" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="Hv8wDZ6hhEGuXk5tbz0J-8" value="" style="endArrow=none;html=1;rounded=0;dashed=1;strokeColor=#777777;" edge="1" parent="1">
+                <mxCell id="Hv8wDZ6hhEGuXk5tbz0J-8" value="" style="endArrow=none;html=1;rounded=0;dashed=1;strokeColor=#777777;" parent="1" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="775" y="140" as="sourcePoint"/>
                         <mxPoint x="775" y="730" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="Hv8wDZ6hhEGuXk5tbz0J-9" value="" style="endArrow=none;html=1;rounded=0;dashed=1;strokeColor=#777777;" edge="1" parent="1">
+                <mxCell id="Hv8wDZ6hhEGuXk5tbz0J-9" value="" style="endArrow=none;html=1;rounded=0;dashed=1;strokeColor=#777777;" parent="1" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="1045" y="140" as="sourcePoint"/>
                         <mxPoint x="1045" y="730" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="Hv8wDZ6hhEGuXk5tbz0J-10" value="1. connect()" style="endArrow=block;html=1;rounded=0;strokeWidth=2;strokeColor=#333333;fontSize=12;" edge="1" parent="1">
+                <mxCell id="Hv8wDZ6hhEGuXk5tbz0J-10" value="1. connect()" style="endArrow=block;html=1;rounded=0;strokeWidth=2;strokeColor=#333333;fontSize=12;" parent="1" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="165" y="180" as="sourcePoint"/>
                         <mxPoint x="470" y="180" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="Hv8wDZ6hhEGuXk5tbz0J-11" value="2. accept client and dispatch worker" style="endArrow=block;html=1;rounded=0;strokeWidth=2;strokeColor=#333333;fontSize=12;" edge="1" parent="1">
+                <mxCell id="Hv8wDZ6hhEGuXk5tbz0J-11" value="2. accept client and dispatch worker" style="endArrow=block;html=1;rounded=0;strokeWidth=2;strokeColor=#333333;fontSize=12;" parent="1" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="470" y="230" as="sourcePoint"/>
                         <mxPoint x="775" y="230" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="Hv8wDZ6hhEGuXk5tbz0J-12" value="3. START header + file size + filename" style="endArrow=block;html=1;rounded=0;strokeWidth=2;strokeColor=#333333;fontSize=12;" edge="1" parent="1">
+                <mxCell id="Hv8wDZ6hhEGuXk5tbz0J-12" value="3. START header + file size + filename" style="endArrow=block;html=1;rounded=0;strokeWidth=2;strokeColor=#333333;fontSize=12;" parent="1" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="165" y="280" as="sourcePoint"/>
                         <mxPoint x="775" y="280" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="Hv8wDZ6hhEGuXk5tbz0J-13" value="loop: for each chunk" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#999999;dashed=1;fontColor=#333333;fontSize=12;align=left;verticalAlign=top;spacing=8;" vertex="1" parent="1">
+                <mxCell id="Hv8wDZ6hhEGuXk5tbz0J-13" value="loop: for each chunk" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#999999;dashed=1;fontColor=#333333;fontSize=12;align=left;verticalAlign=top;spacing=8;" parent="1" vertex="1">
                     <mxGeometry x="125" y="315" width="700" height="150" as="geometry"/>
                 </mxCell>
-                <mxCell id="Hv8wDZ6hhEGuXk5tbz0J-14" value="4. DATA header + chunk bytes" style="endArrow=block;html=1;rounded=0;strokeWidth=2;strokeColor=#333333;fontSize=12;" edge="1" parent="1">
+                <mxCell id="Hv8wDZ6hhEGuXk5tbz0J-14" value="4. DATA header + chunk bytes" style="endArrow=block;html=1;rounded=0;strokeWidth=2;strokeColor=#333333;fontSize=12;" parent="1" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="165" y="360" as="sourcePoint"/>
                         <mxPoint x="775" y="360" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="Hv8wDZ6hhEGuXk5tbz0J-15" value="5. append chunk to temp file" style="endArrow=block;html=1;rounded=0;strokeWidth=2;strokeColor=#333333;fontSize=12;" edge="1" parent="1">
+                <mxCell id="Hv8wDZ6hhEGuXk5tbz0J-15" value="5. append chunk to temp file" style="endArrow=block;html=1;rounded=0;strokeWidth=2;strokeColor=#333333;fontSize=12;" parent="1" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="775" y="405" as="sourcePoint"/>
                         <mxPoint x="1045" y="405" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="Hv8wDZ6hhEGuXk5tbz0J-16" value="6. ACK chunk_id" style="endArrow=block;html=1;rounded=0;strokeWidth=2;strokeColor=#333333;fontSize=12;" edge="1" parent="1">
+                <mxCell id="Hv8wDZ6hhEGuXk5tbz0J-16" value="6. ACK chunk_id" style="endArrow=block;html=1;rounded=0;strokeWidth=2;strokeColor=#333333;fontSize=12;" parent="1" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="775" y="450" as="sourcePoint"/>
                         <mxPoint x="165" y="450" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="Hv8wDZ6hhEGuXk5tbz0J-17" value="7. END header + SHA-256 hash" style="endArrow=block;html=1;rounded=0;strokeWidth=2;strokeColor=#333333;fontSize=12;" edge="1" parent="1">
+                <mxCell id="Hv8wDZ6hhEGuXk5tbz0J-17" value="7. END header + SHA-256 hash" style="endArrow=block;html=1;rounded=0;strokeWidth=2;strokeColor=#333333;fontSize=12;" parent="1" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="165" y="520" as="sourcePoint"/>
                         <mxPoint x="775" y="520" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="Hv8wDZ6hhEGuXk5tbz0J-18" value="8. read temp file and compute SHA-256" style="endArrow=block;html=1;rounded=0;strokeWidth=2;strokeColor=#333333;fontSize=12;" edge="1" parent="1">
+                <mxCell id="Hv8wDZ6hhEGuXk5tbz0J-18" value="8. read temp file and compute SHA-256" style="endArrow=block;html=1;rounded=0;strokeWidth=2;strokeColor=#333333;fontSize=12;" parent="1" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="775" y="570" as="sourcePoint"/>
                         <mxPoint x="1045" y="570" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="Hv8wDZ6hhEGuXk5tbz0J-19" value="9. if hash and size match, rename temp file" style="endArrow=block;html=1;rounded=0;strokeWidth=2;strokeColor=#333333;fontSize=12;" edge="1" parent="1">
+                <mxCell id="Hv8wDZ6hhEGuXk5tbz0J-19" value="9. if hash and size match, rename temp file" style="endArrow=block;html=1;rounded=0;strokeWidth=2;strokeColor=#333333;fontSize=12;" parent="1" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="775" y="620" as="sourcePoint"/>
                         <mxPoint x="1045" y="620" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="Hv8wDZ6hhEGuXk5tbz0J-20" value="10. final END ACK" style="endArrow=block;html=1;rounded=0;strokeWidth=2;strokeColor=#333333;fontSize=12;" edge="1" parent="1">
+                <mxCell id="Hv8wDZ6hhEGuXk5tbz0J-20" value="10. final END ACK" style="endArrow=block;html=1;rounded=0;strokeWidth=2;strokeColor=#333333;fontSize=12;" parent="1" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="775" y="680" as="sourcePoint"/>
                         <mxPoint x="165" y="680" as="targetPoint"/>
